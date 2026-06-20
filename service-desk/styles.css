@@ -12,6 +12,20 @@
   --shadow: 0 16px 42px rgba(23, 32, 51, 0.10);
 }
 
+body.dark-mode {
+  --bg: #0f1726;
+  --panel: #15202b;
+  --ink: #f8fafc;
+  --muted: #a0aec0;
+  --line: #2f3c53;
+  --primary: #6e9dff;
+  --primary-dark: #4071d6;
+  --success: #7ddc9b;
+  --warning: #f7c16f;
+  --danger: #f26e6e;
+  --shadow: 0 16px 42px rgba(0, 0, 0, 0.45);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -36,7 +50,7 @@ button {
   border-radius: 8px;
   padding: 10px 14px;
   color: var(--ink);
-  background: #fff;
+  background: var(--panel);
   cursor: pointer;
 }
 
@@ -62,7 +76,7 @@ button:hover {
   gap: 24px;
   padding: 24px clamp(16px, 4vw, 48px);
   border-bottom: 1px solid var(--line);
-  background: #fff;
+  background: var(--panel);
 }
 
 h1,
@@ -75,6 +89,15 @@ p {
 h1 {
   margin-bottom: 0;
   font-size: 30px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.theme-button {
+  min-width: 132px;
 }
 
 h2 {
@@ -172,7 +195,7 @@ textarea {
   border-radius: 8px;
   padding: 11px 12px;
   color: var(--ink);
-  background: #fff;
+  background: var(--panel);
 }
 
 textarea {
@@ -245,6 +268,20 @@ textarea {
   border-bottom: none;
 }
 
+body.dark-mode .ticket-card-wrapper.is-selected .ticket-card {
+  background: #1f2f48;
+  border-bottom: none;
+}
+
+body.dark-mode .ticket-card {
+  border-color: #2f3c53;
+}
+
+body.dark-mode .ticket-card:hover,
+body.dark-mode .ticket-card.is-selected {
+  background: #1f2f48;
+}
+
 .ticket-card {
   flex: 1;
 }
@@ -288,13 +325,15 @@ textarea {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  padding: 4px 8px;
+  height: 32px;
+  padding: 0 14px;
+  min-width: 140px;
+  white-space: nowrap;
   color: #293142;
   background: #eef2f7;
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
-  min-width: 0;
 }
 
 .badge.status-resolvido {
@@ -351,6 +390,24 @@ textarea {
   border-radius: 8px;
   padding: 14px;
   background: #fbfcfe;
+}
+
+body.dark-mode .description-box,
+body.dark-mode .history-box,
+body.dark-mode .form-panel,
+body.dark-mode .details-panel,
+body.dark-mode .ticket-list,
+body.dark-mode .table-wrap,
+body.dark-mode table,
+body.dark-mode th,
+body.dark-mode td {
+  background: #15202b;
+  color: var(--ink);
+}
+
+body.dark-mode .description-box,
+body.dark-mode .history-box {
+  border-color: #2f3c53;
 }
 
 .history-box ul {

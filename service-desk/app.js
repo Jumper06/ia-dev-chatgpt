@@ -1,4 +1,7 @@
 const STORAGE_KEY = "serviceDeskTickets";
+const SEED_VERSION_KEY = "serviceDeskSeedVersion";
+const SEED_VERSION = "2";
+const THEME_KEY = "serviceDeskTheme";
 
 const seedTickets = [
   {
@@ -33,6 +36,89 @@ const seedTickets = [
       "Chamado aberto por Rafael Lima.",
       "Status alterado para Em atendimento."
     ]
+  },
+  {
+    id: 1003,
+    requester: "Beatriz Nunes",
+    email: "beatriz.nunes@empresa.com",
+    category: "Software",
+    priority: "Alta",
+    status: "Aberto",
+    title: "Erro ao salvar relatório financeiro",
+    description: "Ao salvar o relatório mensal, aparece a mensagem de erro 'falha na gravação'. Já tentei reiniciar o sistema.",
+    correction: "",
+    createdAt: "2026-06-19T08:10:00.000Z",
+    updatedAt: "2026-06-19T08:10:00.000Z",
+    events: [
+      "Chamado aberto por Beatriz Nunes."
+    ]
+  },
+  {
+    id: 1004,
+    requester: "Carlos Pinto",
+    email: "carlos.pinto@empresa.com",
+    category: "Rede",
+    priority: "Crítica",
+    status: "Aguardando usuário",
+    title: "Sem acesso à internet no setor de vendas",
+    description: "Todos os computadores do setor de vendas perderam conexão com a internet após manutenção. A senha e o Wi-Fi estão indisponíveis.",
+    correction: "Técnico escalado para avaliar switch e roteador.",
+    createdAt: "2026-06-19T10:25:00.000Z",
+    updatedAt: "2026-06-19T11:05:00.000Z",
+    events: [
+      "Chamado aberto por Carlos Pinto.",
+      "Status alterado para Aguardando usuário."
+    ]
+  },
+  {
+    id: 1005,
+    requester: "Débora Alves",
+    email: "debora.alves@empresa.com",
+    category: "Acesso",
+    priority: "Baixa",
+    status: "Resolvido",
+    title: "Solicitação de permissão para pasta compartilhada",
+    description: "Preciso de acesso à pasta de documentos do projeto Beta para compartilhar arquivos com a equipe.",
+    correction: "Permissão concedida para leitura e gravação na pasta compartilhada.",
+    createdAt: "2026-06-16T09:00:00.000Z",
+    updatedAt: "2026-06-18T15:30:00.000Z",
+    events: [
+      "Chamado aberto por Débora Alves.",
+      "Correção registrada: Permissão concedida para leitura e gravação na pasta compartilhada."
+    ]
+  },
+  {
+    id: 1006,
+    requester: "Eduardo Santos",
+    email: "eduardo.santos@empresa.com",
+    category: "Outro",
+    priority: "Média",
+    status: "Aberto",
+    title: "Solicitação de instalação de software de videoconferência",
+    description: "Preciso instalar a versão mais recente do software de videoconferência em meu computador para a reunião de hoje.",
+    correction: "",
+    createdAt: "2026-06-19T13:20:00.000Z",
+    updatedAt: "2026-06-19T13:20:00.000Z",
+    events: [
+      "Chamado aberto por Eduardo Santos."
+    ]
+  },
+  {
+    id: 1007,
+    requester: "Fernanda Rocha",
+    email: "fernanda.rocha@empresa.com",
+    category: "Hardware",
+    priority: "Alta",
+    status: "Em atendimento",
+    title: "Impressora não imprime cores corretamente",
+    description: "A impressora do setor de marketing está imprimindo apenas em tons de cinza, mesmo com cartuchos coloridos cheios.",
+    correction: "Solicitação de manutenção de cabeçote encaminhada.",
+    createdAt: "2026-06-18T16:45:00.000Z",
+    updatedAt: "2026-06-19T09:50:00.000Z",
+    events: [
+      "Chamado aberto por Fernanda Rocha.",
+      "Status alterado para Em atendimento."
+    ]
   }
 ];
 
@@ -48,6 +134,7 @@ const ticketCounter = document.querySelector("#ticketCounter");
 const historyTable = document.querySelector("#historyTable");
 const searchInput = document.querySelector("#searchInput");
 const clearData = document.querySelector("#clearData");
+const themeToggle = document.querySelector("#themeToggle");
 const toast = document.querySelector("#toast");
 
 tabs.forEach((tab) => {
@@ -90,6 +177,14 @@ ticketForm.addEventListener("submit", (event) => {
 
 searchInput.addEventListener("input", renderTicketList);
 
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    const nextTheme = document.body.classList.contains("dark-mode") ? "light" : "dark";
+    localStorage.setItem(THEME_KEY, nextTheme);
+    applyTheme(nextTheme);
+  });
+}
+
 if (clearData) {
   clearData.addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -101,16 +196,46 @@ if (clearData) {
   });
 }
 
+function applyTheme(theme) {
+  if (theme === "dark") {
+    document.body.classList.add("dark-mode");
+    if (themeToggle) themeToggle.textContent = "Modo claro";
+  } else {
+    document.body.classList.remove("dark-mode");
+    if (themeToggle) themeToggle.textContent = "Modo escuro";
+  }
+}
+
+function loadTheme() {
+  const storedTheme = localStorage.getItem(THEME_KEY);
+  const theme = storedTheme === "dark" ? "dark" : "light";
+  applyTheme(theme);
+}
+
 function loadTickets() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(seedTickets));
+    localStorage.setItem(SEED_VERSION_KEY, SEED_VERSION);
     return [...seedTickets];
   }
 
   try {
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored);
+    if (localStorage.getItem(SEED_VERSION_KEY) !== SEED_VERSION) {
+      const missingSeeds = seedTickets.filter((seedTicket) =>
+        !parsed.some((ticket) => ticket.id === seedTicket.id)
+      );
+      const migrated = [...parsed, ...missingSeeds];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      localStorage.setItem(SEED_VERSION_KEY, SEED_VERSION);
+      return migrated;
+    }
+
+    return parsed;
   } catch {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seedTickets));
+    localStorage.setItem(SEED_VERSION_KEY, SEED_VERSION);
     return [...seedTickets];
   }
 }
@@ -332,4 +457,5 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove("is-visible"), 2600);
 }
 
+loadTheme();
 render();
