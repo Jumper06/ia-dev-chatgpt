@@ -90,14 +90,16 @@ ticketForm.addEventListener("submit", (event) => {
 
 searchInput.addEventListener("input", renderTicketList);
 
-clearData.addEventListener("click", () => {
-  localStorage.removeItem(STORAGE_KEY);
-  tickets = [...seedTickets];
-  selectedTicketId = tickets[0].id;
-  saveTickets();
-  showToast("Base local restaurada.");
-  render();
-});
+if (clearData) {
+  clearData.addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    tickets = [];
+    selectedTicketId = null;
+    saveTickets();
+    showToast("Base local foi completamente limpa.");
+    render();
+  });
+}
 
 function loadTickets() {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -118,7 +120,18 @@ function saveTickets() {
 }
 
 function nextId() {
+  if (tickets.length === 0) return 1001;
   return Math.max(...tickets.map((ticket) => ticket.id)) + 1;
+}
+
+function deleteTicket(ticketId) {
+  tickets = tickets.filter((ticket) => ticket.id !== ticketId);
+  if (selectedTicketId === ticketId) {
+    selectedTicketId = tickets[0]?.id ?? null;
+  }
+  saveTickets();
+  showToast(`Chamado #${ticketId} foi deletado.`);
+  render();
 }
 
 function render() {
@@ -132,7 +145,8 @@ function renderTicketList() {
   const filteredTickets = tickets.filter((ticket) => {
     return (
       String(ticket.id).includes(term) ||
-      ticket.title.toLowerCase().includes(term)
+      ticket.title.toLowerCase().includes(term) ||
+      ticket.requester.toLowerCase().includes(term)
     );
   });
 
@@ -144,14 +158,17 @@ function renderTicketList() {
   }
 
   ticketList.innerHTML = filteredTickets.map((ticket) => `
-    <button class="ticket-card ${ticket.id === selectedTicketId ? "is-selected" : ""}" data-ticket-id="${ticket.id}">
-      <span class="ticket-title">#${ticket.id} - ${escapeHtml(ticket.title)}</span>
-      <span class="ticket-meta">${escapeHtml(ticket.requester)} • ${formatDate(ticket.updatedAt)}</span>
-      <span class="badge-row">
-        <span class="badge ${statusClass(ticket.status)}">${ticket.status}</span>
-        <span class="badge ${priorityClass(ticket.priority)}">${ticket.priority}</span>
-      </span>
-    </button>
+    <div class="ticket-card-wrapper ${ticket.id === selectedTicketId ? "is-selected" : ""}" data-ticket-id="${ticket.id}">
+      <button class="ticket-card" data-ticket-id="${ticket.id}">
+        <span class="ticket-title">#${ticket.id} - ${escapeHtml(ticket.title)}</span>
+        <span class="ticket-meta">${escapeHtml(ticket.requester)} • ${formatDate(ticket.updatedAt)}</span>
+        <span class="badge-row">
+          <span class="badge ${statusClass(ticket.status)}">${ticket.status}</span>
+          <span class="badge ${priorityClass(ticket.priority)}">${ticket.priority}</span>
+        </span>
+      </button>
+      <button class="ticket-delete" data-ticket-id="${ticket.id}" title="Deletar chamado">🗑️</button>
+    </div>
   `).join("");
 
   document.querySelectorAll(".ticket-card").forEach((card) => {
@@ -159,6 +176,14 @@ function renderTicketList() {
       selectedTicketId = Number(card.dataset.ticketId);
       renderTicketList();
       renderTicketDetails();
+    });
+  });
+
+  document.querySelectorAll(".ticket-delete").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const ticketId = Number(btn.dataset.ticketId);
+      deleteTicket(ticketId);
     });
   });
 }
